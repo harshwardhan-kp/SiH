@@ -50,18 +50,18 @@ interface ProfileData {
 // Mock profile data
 const mockProfileData: ProfileData = {
     personalInfo: {
-        name: "Raj Kumar Singh",
-        studentId: "DTU2021001",
-        email: "raj.kumar@dtu.ac.in",
-        phone: "+91-9876543210",
-        department: "Computer Engineering",
+        name: "Harshwardhan",
+        studentId: "RG250452",
+        email: "harshwardhan_250452@aitpune.edu.in",
+        phone: "+91-9096453940",
+        department: "Information Technology",
         semester: 6,
         dateOfBirth: "2003-05-15",
-        address: "H-123, Hostel Block A, DTU Campus, Delhi - 110042",
-        linkedin: "https://linkedin.com/in/rajkumar-singh",
-        github: "https://github.com/rajkumar",
-        website: "https://rajkumar.dev",
-        bio: "Passionate Computer Engineering student with interests in AI/ML, web development, and open-source contributions. Winner of multiple hackathons and active contributor to the tech community.",
+        address: "H-123, Hostel Block A, AIT Pune, Dighi, Pune",
+        linkedin: "https://linkedin.com/in/harshwardhan",
+        github: "https://github.com/harshwardhan-kp",
+        website: "https://harshwardhan.dev",
+        bio: "Passionate Information Technology student with interests in AI/ML, web development, and open-source contributions. Winner of multiple hackathons and active contributor to the tech community.",
     },
     preferences: {
         emailNotifications: true,
