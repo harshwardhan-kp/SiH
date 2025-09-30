@@ -164,7 +164,7 @@ export const LoginPage: React.FC = () => {
             <p className="text-sm text-gray-600">
               Demo credentials:{' '}
               <br />
-              Student: student@demo.com / password
+              Student: harsh@demo.com / password
               <br />
               Faculty: faculty@demo.com / password
             </p>

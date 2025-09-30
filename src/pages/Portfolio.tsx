@@ -71,15 +71,15 @@ interface PortfolioData {
 // Mock portfolio data
 const mockPortfolioData: PortfolioData = {
     personalInfo: {
-        name: "Raj Kumar Singh",
-        studentId: "DTU2021001",
-        email: "raj.kumar@dtu.ac.in",
-        department: "Computer Engineering",
+        name: "Harshwardhan",
+        studentId: "RG250452",
+        email: "harshwardhan_250452@aitpune.edu.in",
+        department: "Information Technology",
         semester: 6,
-        phone: "+91-9876543210",
-        linkedin: "https://linkedin.com/in/rajkumar-singh",
-        github: "https://github.com/rajkumar",
-        website: "https://rajkumar.dev",
+        phone: "+91-9096453940",
+        linkedin: "https://linkedin.com/in/harshwardhan",
+        github: "https://github.com/harshwardhan-kp",
+        website: "https://harshwardhan.dev",
     },
     activities: [
         {
