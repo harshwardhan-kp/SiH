@@ -89,7 +89,7 @@ export const Layout: React.FC = () => {
                                 Smart Student Hub
                             </div>
                             <div className="text-xs text-gray-500">
-                                DTU Portal
+                                AIT Portal
                             </div>
                         </div>
                     </div>
