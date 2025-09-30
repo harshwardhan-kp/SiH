@@ -184,22 +184,35 @@ cd smart-student-hub
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (No backend required!)
 npm run dev
-
-# Start mock API server (in separate terminal)
-npm run server
 ```
 
+### 🎯 **Demo Features**
+- **No Server Required**: All data is handled client-side
+- **Persistent Demo Data**: Data persists in browser localStorage
+- **Complete Feature Demo**: All features work with mock data
+- **Multiple User Roles**: Test different permission levels
+
 ### Demo Credentials
-**Student Account:**
-- Email: `student@demo.com`
-- Password: `password`
+**Student Accounts:**
+- Email: `harsh@demo.com` / Password: `password` (IT Student)
+- Email: `neha.student@demo.com` / Password: `password` (EC Student)
+- Email: `vikram.student@demo.com` / Password: `password` (ME Student)
 
-**Faculty Account:**
-- Email: `faculty@demo.com`
-- Password: `password`
+**Faculty Accounts:**
+- Email: `faculty@demo.com` / Password: `password` (CS Department)
+- Email: `dr.anil@demo.com` / Password: `password` (EC Department)
 
+**Admin Account:**
+- Email: `admin@demo.com` / Password: `password` (System Admin)
+
+### 📖 **Demo Guide**
+Click the "View Demo Guide & All Credentials" button on the login page for:
+- Complete feature walkthrough
+- All available demo accounts
+- Sample data explanation
+- Getting started tips
 ## 📊 **Key Performance Metrics**
 
 ### User Experience
@@ -246,9 +259,16 @@ npm run server
 - **Event Management**: Campus event management system
 - **Alumni Network**: Alumni engagement platform
 
-## 📝 **API Documentation**
+## 📝 **Mock Data Architecture**
 
-### Base URL: `http://localhost:3001`
+### 🔧 Client-Side Implementation
+The demo uses a sophisticated mock data system that simulates real API behavior:
+
+- **Mock Data Service**: Handles all CRUD operations
+- **localStorage Persistence**: Data persists across browser sessions
+- **Simulated Delays**: Realistic API response times
+- **File Upload Simulation**: Blob URLs for certificate/image uploads
+- **Real-time Updates**: Immediate UI updates with optimistic updates
 
 ### Authentication Endpoints
 - `POST /auth/login` - User login
@@ -278,6 +298,19 @@ npm run server
 - `GET /notifications` - Get user notifications
 - `PATCH /notifications/:id/read` - Mark as read
 - `DELETE /notifications/:id` - Delete notification
+
+## 🚀 **Production Deployment**
+
+### Building for Production
+```bash
+npm run build
+```
+
+### Key Architecture Benefits
+- **Zero Backend Dependency**: Perfect for demos and prototypes
+- **Instant Setup**: No database or server configuration needed
+- **Full Feature Parity**: All features work exactly as they would with a real backend
+- **Easy Migration**: Services are designed to easily switch to real APIs
 
 ## 🤝 **Contributing**
 

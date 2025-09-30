@@ -1,23 +1,5 @@
-import axios from "axios";
 import { User, LoginCredentials, RegisterData } from "../types";
-
-const API_BASE_URL = "http://localhost:3001";
-
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+import mockData from "../../db.json";
 
 interface LoginResponse {
     user: User;
@@ -29,13 +11,17 @@ interface RegisterResponse {
     token: string;
 }
 
+// Simulate API delay for more realistic behavior
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const login = async (
     credentials: LoginCredentials,
 ): Promise<LoginResponse> => {
+    await delay(500); // Simulate network delay
+
     try {
-        // For demo purposes, we'll simulate authentication by checking against users in db.json
-        const response = await api.get<User[]>("/users");
-        const users = response.data;
+        // Check against users in db.json
+        const users = mockData.users;
 
         const user = users.find(
             (u) =>
@@ -55,11 +41,11 @@ export const login = async (
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                role: user.role,
+                role: user.role as "student" | "faculty" | "admin",
                 studentId: user.studentId,
                 department: user.department,
                 semester: user.semester,
-                avatar: user.avatar,
+                avatar: user.avatar || undefined,
                 createdAt: user.createdAt,
             },
             token,
@@ -68,16 +54,25 @@ export const login = async (
         if (error.message === "Invalid email or password") {
             throw error;
         }
-        throw new Error(error.response?.data?.message || "Login failed");
+        throw new Error("Login failed");
     }
 };
 
 export const register = async (
     data: RegisterData,
 ): Promise<RegisterResponse> => {
+    await delay(500); // Simulate network delay
+
     try {
-        // For demo purposes, we'll simulate registration
-        // In a real app, this would create a new user in the database
+        // Check if user already exists
+        const users = mockData.users;
+        const existingUser = users.find((u) => u.email === data.email);
+
+        if (existingUser) {
+            throw new Error("User with this email already exists");
+        }
+
+        // For demo purposes, simulate registration by creating a new user object
         const newUser: User = {
             id: String(Date.now()),
             email: data.email,
@@ -96,45 +91,81 @@ export const register = async (
             token,
         };
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || "Registration failed");
+        throw new Error(error.message || "Registration failed");
     }
 };
 
 export const getCurrentUser = async (): Promise<User> => {
+    await delay(200); // Simulate network delay
+
     try {
-        // For demo purposes, we'll get user data from token stored in localStorage
+        // Get user data from token stored in localStorage
         const token = localStorage.getItem("auth_token");
         if (!token) {
             throw new Error("No authentication token found");
         }
 
         // Extract user ID from mock token (format: demo-token-{userId}-{timestamp})
-        const userId = token.split("-")[2];
+        const tokenParts = token.split("-");
+        if (
+            tokenParts.length < 3 ||
+            tokenParts[0] !== "demo" ||
+            tokenParts[1] !== "token"
+        ) {
+            throw new Error("Invalid authentication token");
+        }
 
-        const response = await api.get<User[]>("/users");
-        const users = response.data;
+        const userId = tokenParts[2];
 
+        const users = mockData.users;
         const user = users.find((u) => u.id === userId);
 
         if (!user) {
             throw new Error("User not found");
         }
 
-        // Remove password from response
+        // Return user without password
         const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword as User;
+        return {
+            ...userWithoutPassword,
+            role: userWithoutPassword.role as "student" | "faculty" | "admin",
+            avatar: userWithoutPassword.avatar || undefined,
+        } as User;
     } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Failed to get user data",
-        );
+        throw new Error(error.message || "Failed to get user data");
     }
 };
 
 export const logout = async (): Promise<void> => {
-    try {
-        await api.post("/auth/logout");
-    } catch (error) {
-        // Even if logout fails on server, we should clear local storage
-        console.error("Logout error:", error);
-    }
+    await delay(100); // Simulate network delay
+
+    // Clear local storage
+    localStorage.removeItem("auth_token");
+};
+
+// Helper function to get all users (for admin purposes)
+export const getAllUsers = async (): Promise<User[]> => {
+    await delay(300);
+
+    // Return users without passwords
+    return mockData.users.map(
+        ({ password, ...user }) =>
+            ({
+                ...user,
+                role: user.role as "student" | "faculty" | "admin",
+                avatar: user.avatar || undefined,
+            }) as User,
+    );
+};
+
+// Helper function to check if user has specific role
+export const hasRole = (user: User | null, roles: string[]): boolean => {
+    if (!user) return false;
+    return roles.includes(user.role);
+};
+
+// Helper function to check if user is authenticated
+export const isAuthenticated = (): boolean => {
+    const token = localStorage.getItem("auth_token");
+    return !!token;
 };

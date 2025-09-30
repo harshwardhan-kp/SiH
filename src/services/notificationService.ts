@@ -1,23 +1,5 @@
-import axios from "axios";
-import { type Notification, ApiResponse } from "../types";
-
-const API_BASE_URL = "http://localhost:3001";
-
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+import { type Notification } from "../types";
+import ApiService from "./apiService";
 
 export const getNotifications = async (filters?: {
     read?: boolean;
@@ -26,16 +8,38 @@ export const getNotifications = async (filters?: {
     offset?: number;
 }): Promise<{ notifications: Notification[]; total: number }> => {
     try {
-        const response = await api.get<
-            ApiResponse<{ notifications: Notification[]; total: number }>
-        >("/notifications", {
-            params: filters,
-        });
-        return response.data.data;
+        // Get current user ID from token
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+            throw new Error("No authentication token found");
+        }
+
+        const userId = token.split("-")[2];
+        const response = await ApiService.getNotifications(userId);
+        let notifications = response.data;
+
+        // Apply filters
+        if (filters?.read !== undefined) {
+            notifications = notifications.filter(
+                (n) => n.read === filters.read,
+            );
+        }
+
+        if (filters?.type) {
+            notifications = notifications.filter(
+                (n) => n.type === filters.type,
+            );
+        }
+
+        // Apply pagination
+        const total = notifications.length;
+        const start = filters?.offset || 0;
+        const limit = filters?.limit || total;
+        notifications = notifications.slice(start, start + limit);
+
+        return { notifications, total };
     } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Failed to fetch notifications",
-        );
+        throw new Error(error.message || "Failed to fetch notifications");
     }
 };
 
@@ -43,15 +47,21 @@ export const markNotificationAsRead = async (
     notificationId: string,
 ): Promise<Notification> => {
     try {
-        const response = await api.patch<ApiResponse<Notification>>(
-            `/notifications/${notificationId}/read`,
-        );
-        return response.data.data;
+        await ApiService.markNotificationAsRead(notificationId);
+
+        // Return updated notification (mock implementation)
+        const token = localStorage.getItem("auth_token");
+        const userId = token?.split("-")[2] || "";
+        const response = await ApiService.getNotifications(userId);
+        const notification = response.data.find((n) => n.id === notificationId);
+
+        if (!notification) {
+            throw new Error("Notification not found");
+        }
+
+        return { ...notification, read: true };
     } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message ||
-                "Failed to mark notification as read",
-        );
+        throw new Error(error.message || "Failed to mark notification as read");
     }
 };
 
@@ -59,14 +69,26 @@ export const markAllNotificationsAsRead = async (): Promise<{
     count: number;
 }> => {
     try {
-        const response = await api.patch<ApiResponse<{ count: number }>>(
-            "/notifications/mark-all-read",
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+            throw new Error("No authentication token found");
+        }
+
+        const userId = token.split("-")[2];
+        const response = await ApiService.getNotifications(userId);
+        const unreadNotifications = response.data.filter((n) => !n.read);
+
+        // Mark all as read (mock implementation)
+        await Promise.all(
+            unreadNotifications.map((n) =>
+                ApiService.markNotificationAsRead(n.id),
+            ),
         );
-        return response.data.data;
+
+        return { count: unreadNotifications.length };
     } catch (error: any) {
         throw new Error(
-            error.response?.data?.message ||
-                "Failed to mark all notifications as read",
+            error.message || "Failed to mark all notifications as read",
         );
     }
 };
@@ -75,24 +97,33 @@ export const deleteNotification = async (
     notificationId: string,
 ): Promise<void> => {
     try {
-        await api.delete(`/notifications/${notificationId}`);
+        // In mock implementation, we don't actually delete from the data
+        // Just simulate the operation
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        console.log(`Notification ${notificationId} deleted (mock)`);
     } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Failed to delete notification",
-        );
+        throw new Error(error.message || "Failed to delete notification");
     }
 };
 
 export const deleteAllNotifications = async (): Promise<{ count: number }> => {
     try {
-        const response =
-            await api.delete<ApiResponse<{ count: number }>>("/notifications");
-        return response.data.data;
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+            throw new Error("No authentication token found");
+        }
+
+        const userId = token.split("-")[2];
+        const response = await ApiService.getNotifications(userId);
+        const count = response.data.length;
+
+        // Simulate deletion
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        console.log(`${count} notifications deleted (mock)`);
+
+        return { count };
     } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message ||
-                "Failed to delete all notifications",
-        );
+        throw new Error(error.message || "Failed to delete all notifications");
     }
 };
 
@@ -104,28 +135,44 @@ export const createNotification = async (notification: {
     userId?: string; // For admin/faculty creating notifications for specific users
 }): Promise<Notification> => {
     try {
-        const response = await api.post<ApiResponse<Notification>>(
-            "/notifications",
-            notification,
-        );
-        return response.data.data;
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+            throw new Error("No authentication token found");
+        }
+
+        const currentUserId = token.split("-")[2];
+        const targetUserId = notification.userId || currentUserId;
+
+        const notificationData = {
+            userId: targetUserId,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            read: false,
+            actionUrl: notification.actionUrl,
+        };
+
+        const response = await ApiService.createNotification(notificationData);
+        return response.data;
     } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Failed to create notification",
-        );
+        throw new Error(error.message || "Failed to create notification");
     }
 };
 
 export const getUnreadCount = async (): Promise<number> => {
     try {
-        const response = await api.get<ApiResponse<{ count: number }>>(
-            "/notifications/unread-count",
-        );
-        return response.data.data.count;
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+            throw new Error("No authentication token found");
+        }
+
+        const userId = token.split("-")[2];
+        const response = await ApiService.getNotifications(userId);
+        const unreadCount = response.data.filter((n) => !n.read).length;
+
+        return unreadCount;
     } catch (error: any) {
-        throw new Error(
-            error.response?.data?.message || "Failed to fetch unread count",
-        );
+        throw new Error(error.message || "Failed to fetch unread count");
     }
 };
 
@@ -138,20 +185,20 @@ export const subscribeToNotifications = (
     // For now, we'll use a mock implementation
     console.log(`Subscribing to notifications for user ${userId}`);
 
-    // Mock real-time notifications
+    // Mock real-time notifications - simulate random notifications for demo
     const interval = setInterval(() => {
-        // Simulate random notifications (uncomment for testing)
-        // const mockNotification: Notification = {
-        //   id: Date.now().toString(),
-        //   userId,
-        //   title: 'New Update Available',
-        //   message: 'You have a new activity update.',
-        //   type: 'info',
-        //   read: false,
-        //   createdAt: new Date().toISOString(),
-        // };
-        // if (Math.random() > 0.95) {
-        //   callback(mockNotification);
+        // Uncomment below for testing real-time notifications
+        // if (Math.random() > 0.98) {
+        //     const mockNotification: Notification = {
+        //         id: Date.now().toString(),
+        //         userId,
+        //         title: 'New Update Available',
+        //         message: 'You have a new activity update.',
+        //         type: 'info',
+        //         read: false,
+        //         createdAt: new Date().toISOString(),
+        //     };
+        //     callback(mockNotification);
         // }
     }, 5000);
 
@@ -198,4 +245,43 @@ export const showBrowserNotification = (notification: Notification) => {
             browserNotification.close();
         }, 5000);
     }
+};
+
+// Utility function to create system notifications
+export const createSystemNotification = async (
+    userId: string,
+    title: string,
+    message: string,
+    type: "info" | "success" | "warning" | "error" = "info",
+    actionUrl?: string,
+): Promise<Notification> => {
+    return createNotification({
+        title,
+        message,
+        type,
+        actionUrl,
+        userId,
+    });
+};
+
+// Utility function to notify activity status changes
+export const notifyActivityStatusChange = async (
+    studentId: string,
+    activityTitle: string,
+    status: "approved" | "rejected",
+    rejectionReason?: string,
+): Promise<Notification> => {
+    const isApproved = status === "approved";
+    const title = isApproved ? "Activity Approved!" : "Activity Rejected";
+    const message = isApproved
+        ? `Your activity "${activityTitle}" has been approved.`
+        : `Your activity "${activityTitle}" has been rejected. ${rejectionReason ? `Reason: ${rejectionReason}` : ""}`;
+
+    return createSystemNotification(
+        studentId,
+        title,
+        message,
+        isApproved ? "success" : "error",
+        "/dashboard/activities",
+    );
 };
